@@ -1,23 +1,24 @@
-package com.zk.activiti6.chapter.chapter03;
+package com.zk.activiti6.chapter;
 
 import org.activiti.engine.*;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.junit.Test;
 
-public class FirstAct {
+public class FirstActTest {
 
-    public static void main(String[] args) throws Exception {
+    @Test
+    public void test() {
         ProcessEngineConfiguration engineConfiguration = ProcessEngineConfiguration
                 .createProcessEngineConfigurationFromResource("chapter/chapter03/activiti.cfg.xml");
         ProcessEngine engine = engineConfiguration.buildProcessEngine();
-        // 存储服务
+        // 资源部署，
         RepositoryService rs = engine.getRepositoryService();
+        rs.createDeployment().addClasspathResource("chapter/chapter03/first.bpmn").deploy();
         // 运行时服务
         RuntimeService runService = engine.getRuntimeService();
         // 任务服务
         TaskService taskService = engine.getTaskService();
-
-        rs.createDeployment().addClasspathResource("chapter/chapter03/first.bpmn").deploy();
 
         ProcessInstance pi = runService.startProcessInstanceByKey("myProcess");
 
@@ -35,7 +36,8 @@ public class FirstAct {
         System.out.println("流程结束后：" + task);
 
         engine.close();
-        System.exit(0);
-    }
 
+    }
 }
+
+//Generated with love by TestMe :) Please report issues and submit feature requests at: http://weirddev.com/forum#!/testme
