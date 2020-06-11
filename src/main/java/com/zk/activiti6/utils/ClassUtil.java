@@ -1,0 +1,153 @@
+package com.zk.activiti6.utils;
+
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
+@Slf4j
+public class ClassUtil {
+    private static final String CLASS_SUFFIX      = ".class";
+    private static final String CLASS_FILE_PREFIX = File.separator + "classes" + File.separator;
+    private static final String PACKAGE_SEPARATOR = ".";
+
+    /**
+     * 获取指定包名下的所有Class全名称
+     * 
+     * @param packageName 包路径，如org.spring
+     * @param includeSubDir 是否包括子包路径，true-包括，false-不包括
+     * @param includeJarClass 是否包括Jar包中的内容，true-包括，false-不包括
+     * @return List集合，内容为类的全名
+     */
+    public static List<String> getClazzName(String packageName, boolean includeSubDir, boolean includeJarClass) {
+        List<String> result = new ArrayList<>();
+        String suffixPath = packageName.replaceAll("\\.", "/");
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        try {
+            Enumeration<URL> urls = loader.getResources(suffixPath);
+            while (urls.hasMoreElements()) {
+                URL url = urls.nextElement();
+                if (url != null) {
+                    String protocol = url.getProtocol();
+                    if ("file".equals(protocol)) {
+                        String path = url.getPath();
+                        result.addAll(getAllClassNameByFile(new File(path), includeSubDir));
+                    } else if ("jar".equals(protocol) && includeJarClass) {
+                        JarFile jarFile = null;
+                        try {
+                            jarFile = ((JarURLConnection) url.openConnection()).getJarFile();
+                        } catch (Exception e) {
+                            log.warn("执行((JarURLConnection) url.openConnection()).getJarFile()异常", e);
+                        }
+                        if (jarFile != null) {
+                            result.addAll(getAllClassNameByJar(jarFile, packageName, includeSubDir));
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("getClazzName异常", e);
+        }
+        return result;
+    }
+
+    /**
+     * 递归获取所有class文件的名字
+     * 
+     * @param file
+     * @param flag 是否需要迭代遍历
+     * @return List
+     */
+    @SuppressWarnings("all")
+    private static List<String> getAllClassNameByFile(File file, boolean flag) {
+        List<String> result = new ArrayList<>();
+        if (!file.exists()) {
+            return result;
+        }
+        if (file.isFile()) {
+            String path = file.getPath();
+            // 注意：这里替换文件分割符要用replace。因为replaceAll里面的参数是正则表达式,而windows环境中File.separator="\\"的,因此会有问题
+            if (path.endsWith(CLASS_SUFFIX)) {
+                path = path.replace(CLASS_SUFFIX, "");
+                // 从"/classes/"后面开始截取
+                String clazzName = path.substring(path.indexOf(CLASS_FILE_PREFIX) + CLASS_FILE_PREFIX.length())
+                        .replace(File.separator, PACKAGE_SEPARATOR);
+                if (!clazzName.contains("$")) {
+                    result.add(clazzName);
+                }
+            }
+            return result;
+        } else {
+            File[] listFiles = file.listFiles();
+            if (listFiles != null && listFiles.length > 0) {
+                for (File f : listFiles) {
+                    if (flag) {
+                        result.addAll(getAllClassNameByFile(f, true));
+                    } else {
+                        if (f.isFile()) {
+                            String path = f.getPath();
+                            if (path.endsWith(CLASS_SUFFIX)) {
+                                path = path.replace(CLASS_SUFFIX, "");
+                                // 从"/classes/"后面开始截取
+                                String clazzName = path
+                                        .substring(path.indexOf(CLASS_FILE_PREFIX) + CLASS_FILE_PREFIX.length())
+                                        .replace(File.separator, PACKAGE_SEPARATOR);
+                                if (!clazzName.contains("$")) {
+                                    result.add(clazzName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+    }
+
+    /**
+     * 递归获取jar所有class文件的名字
+     * 
+     * @param jarFile
+     * @param packageName 包名
+     * @param flag 是否需要迭代遍历
+     * @return List
+     */
+    private static List<String> getAllClassNameByJar(JarFile jarFile, String packageName, boolean flag) {
+        List<String> result = new ArrayList<>();
+        Enumeration<JarEntry> entries = jarFile.entries();
+        while (entries.hasMoreElements()) {
+            JarEntry jarEntry = entries.nextElement();
+            String name = jarEntry.getName();
+            // 判断是不是class文件
+            if (name.endsWith(CLASS_SUFFIX)) {
+                name = name.replace(CLASS_SUFFIX, "").replace("/", ".");
+                if (flag) {
+                    // 如果要子包的文件,那么就只要开头相同且不是内部类就ok
+                    if (name.startsWith(packageName) && !name.contains("$")) {
+                        result.add(name);
+                    }
+                } else {
+                    // 如果不要子包的文件,那么就必须保证最后一个"."之前的字符串和包名一样且不是内部类
+                    if (packageName.equals(name.substring(0, name.lastIndexOf("."))) && !name.contains("$")) {
+                        result.add(name);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    // 测试
+    public static void main(String[] args) {
+        List<String> list = getClazzName("com", true, false);
+        for (String string : list) {
+            System.out.println(string);
+        }
+    }
+}
