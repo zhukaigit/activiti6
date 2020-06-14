@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!-- 流程引擎配置的bean -->
+	<bean id="customProcessDiagramGenerator" class="com.zk.activiti6.activiti.custom.CustomProcessDiagramGenerator"/>
+
+	<bean id="processEngineConfiguration"
+		  class="org.activiti.engine.impl.cfg.StandaloneProcessEngineConfiguration">
+		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/ACT?useUnicode=true&amp;characterEncoding=utf8&amp;nullCatalogMeansCurrent=true&amp;useSSL=false&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC" />
+		<property name="jdbcDriver" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUsername" value="root" />
+		<property name="jdbcPassword" value="root" />
+		<!--<property name="databaseSchemaUpdate" value="true" />-->
+		<!--<property name="databaseSchemaUpdate" value="create-drop" />-->
+		<property name="databaseSchemaUpdate" value="false" />
+		<!--<property name="databaseSchemaUpdate" value="drop-create" />-->
+		<property name="processDiagramGenerator" ref="customProcessDiagramGenerator"/>
+	</bean>
+</beans>

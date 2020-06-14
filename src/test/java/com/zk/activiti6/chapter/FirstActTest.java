@@ -10,11 +10,11 @@ public class FirstActTest {
     @Test
     public void test() {
         ProcessEngineConfiguration engineConfiguration = ProcessEngineConfiguration
-                .createProcessEngineConfigurationFromResource("chapter/chapter03/activiti.cfg.xml");
+                .createProcessEngineConfigurationFromResource("chapter/activiti.cfg.xml");
         ProcessEngine engine = engineConfiguration.buildProcessEngine();
         // 资源部署，
         RepositoryService rs = engine.getRepositoryService();
-        rs.createDeployment().addClasspathResource("chapter/chapter03/first.bpmn").deploy();
+        rs.createDeployment().addClasspathResource("chapter/bpmn/first.bpmn").deploy();
         // 运行时服务
         RuntimeService runService = engine.getRuntimeService();
         // 任务服务
