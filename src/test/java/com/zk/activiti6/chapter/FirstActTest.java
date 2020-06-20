@@ -1,5 +1,7 @@
 package com.zk.activiti6.chapter;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSetMultimap;
 import org.activiti.engine.*;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
@@ -37,6 +39,16 @@ public class FirstActTest {
 
         engine.close();
 
+    }
+
+    @Test
+    public void test2() {
+        ImmutableMap<String, Integer> map = ImmutableMap.<String, Integer>builder().put("a", 1).build();
+        System.out.println("ImmutableMap: "+map);
+        ImmutableSetMultimap<String, Integer> multimap = map.asMultimap();
+        System.out.println("multimap: " + multimap);
+        multimap.put("a", 3);
+        System.out.println("multimap: " + multimap);
     }
 }
 

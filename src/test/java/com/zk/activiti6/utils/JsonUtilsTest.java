@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,6 +26,7 @@ public class JsonUtilsTest {
 
         // 验证数组普通字符串
         Assert.assertFalse(JsonUtils.isJsonStr("ok"));
+        Assert.assertFalse(JsonUtils.isJsonStr("0"));
 
         // 验证普通Json字符串
         Assert.assertTrue(JsonUtils.isJsonStr(JsonUtils.toJsonNotNullKey(map)));
@@ -58,14 +60,25 @@ public class JsonUtilsTest {
         User user = new User("张三", 18);
         HashMap<String, Object> map = new HashMap<>();
         map.put("result", "ok");
+        map.put("code", "0");
         map.put("data", user);
+        map.put("userList", Lists.newArrayList(user));
         String jsonStr = JsonUtils.toJsonNotNullKey(map);
 
         Assert.assertEquals(jsonStr, JsonUtils.getValueDeeply(jsonStr));
         Assert.assertEquals("ok", JsonUtils.getValueDeeply(jsonStr, "result"));
+        Assert.assertEquals("0", JsonUtils.getValueDeeply(jsonStr, "code"));
+        String userJson = JsonUtils.getValueDeeply(jsonStr, "data");
+        System.out.println("userJson = " + userJson);
+        Assert.assertTrue(userJson.startsWith("{") && userJson.endsWith("}"));
         Assert.assertEquals("张三", JsonUtils.getValueDeeply(jsonStr, "data", "name"));
         Assert.assertEquals("18", JsonUtils.getValueDeeply(jsonStr, "data", "age"));
         Assert.assertNull(JsonUtils.getValueDeeply(jsonStr, "data", "notExisted"));
+
+        String userListJsonArr = JsonUtils.getValueDeeply(jsonStr, "userList");
+        System.out.println("userListJsonArr = " + userListJsonArr);
+        Assert.assertTrue(userListJsonArr.startsWith("[") && userListJsonArr.endsWith("]"));
+
     }
 
     @Test
@@ -88,6 +101,16 @@ public class JsonUtilsTest {
     private static class User {
         private String name;
         private int    age;
+    }
+
+    @Test
+    public void test_toObjList() {
+        ArrayList<User> list = Lists.newArrayList(new User("zk", 10));
+        String jsonArr = JsonUtils.toJsonNotNullKey(list);
+        System.out.println("jsonArr = " + jsonArr);
+        List<User> users = JsonUtils.toObjList(jsonArr, User.class);
+        Assert.assertTrue(list.get(0).getName().equals(users.get(0).getName()));
+        Assert.assertTrue(list.get(0).getAge() == users.get(0).getAge());
     }
 
 }
