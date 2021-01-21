@@ -10,7 +10,7 @@
 	<name>activiti6-learn</name>
 
 	<properties>
-		<jackson.version>2.9.8</jackson.version>
+		<jackson.version>2.12.1</jackson.version>
 	</properties>
 
 	<dependencyManagement>
